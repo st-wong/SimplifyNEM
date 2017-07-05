@@ -50,6 +50,14 @@ public class SimplifyNEM {
     public static final long MOSAIC_MAX_QUANTITY = 9_000_000_000_000_000L;
 
     public static void main(String[] args) {
+        // Accounts' Details
+        String senderAddress = "TDSPQOUYI6VBGD2SAERJ73ZYMNY5ACJSYNTZSUHP";
+        String senderPublicKey = "47e53fa955f3f09aa2086111757fc9fb74575d5a65076c41a2baebcb304198cd";
+        String senderPrivateKey = "48c74382c3346f061f9e8dce1e15fcc77e4d4d882a2524508c78b0758180f287";
+        String receiverAddress = "TDLAJRXNB25HSO4A3D333PMZFW67IV2PJSUW2RK5";
+        String receiverPublicKey = "29587ae3375d6a3a01cff1c920642a12f99ff6d52290f8172970ae755f4fec11";
+        String receiverPrivateKey = "f0048025a9204acc7f63da80e44782692308f7b8fcbfa562e0d01686ee448e03";
+
         utilityFunc = new UtilityFunctions(NEM_ADDRESS);
 
         //Send Message & XEM
@@ -130,17 +138,16 @@ public class SimplifyNEM {
     private static String CreateMosaic(String accountPrivateKey, String mosaicName, String mosaicDescription, String mosaicQty) {
         TimeInstant timeInstant = new SystemTimeProvider().getCurrentTime();
         Account mosaicAccount = new Account(new KeyPair(PrivateKey.fromHexString(accountPrivateKey)));
+        Account sinkingfeeAccount = new Account(Address.fromEncoded(TESTNET_MOSAIC_SINKING));
+
         Properties mosaicProperty = new Properties();
         mosaicProperty.put("divisibility", "0");
         mosaicProperty.put("initialSupply", mosaicQty);
         mosaicProperty.put("supplyMutable", "false");
         mosaicProperty.put("transferable", "true");
         MosaicDefinition mosaicDef = new MosaicDefinition(mosaicAccount, MosaicId.parse(mosaicName), new MosaicDescriptor(mosaicDescription), new DefaultMosaicProperties(mosaicProperty),  new MosaicLevy(MosaicTransferFeeType.Absolute, mosaicAccount, MosaicId.parse("nem:xem"), Quantity.ZERO));
-        System.out.println(mosaicDef.getProperties().getInitialSupply());
-        System.out.println(mosaicProperty.getProperty("initialSupply"));
-        System.out.println(mosaicQty);
 
-        MosaicDefinitionCreationTransaction mosaicTransaction = new MosaicDefinitionCreationTransaction(timeInstant, mosaicAccount, mosaicDef);
+        MosaicDefinitionCreationTransaction mosaicTransaction = new MosaicDefinitionCreationTransaction(timeInstant, sinkingfeeAccount, mosaicDef);
         mosaicTransaction.setFee(Amount.fromNem(20));
         mosaicTransaction.setDeadline(timeInstant.addHours(23));
         mosaicTransaction.sign();
