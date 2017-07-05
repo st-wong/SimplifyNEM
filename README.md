@@ -1,14 +1,20 @@
 # SimplifyNEM
 
 
-Examples on simplifying NEM
+Examples on NEM's APIs
 
 
-**GetResults()**
-* HTTP Get call to NIS API [/account/get](http://bob.nem.ninja/docs/#requesting-the-account-data)
+**SendTransaction()**
+* Send signed transaction for NEMs, non-encrypted messages and Mosaics
 
-**PostResults()**
-* HTTP Post call to NIS API [/local/account/transfers/all](http://bob.nem.ninja/docs/#transaction-data-with-decoded-messages)
+**RentNamespace()**
+* Rent root or sub namespaces
 
-**CreateAccountDeposit()**
-* Creating new account and transfer amount to activate account
+**CreateMosaic()**
+* Creating new mosaics
+
+**GetAllConfirmedMessages()**
+* Retrieve all transactions for an account
+
+**StartWebSocketService()**
+* Web Socket STOMP messaging for an account's transactions
