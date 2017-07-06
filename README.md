@@ -13,6 +13,9 @@ Examples on NEM's APIs
 **CreateMosaic()**
 * Creating new mosaics
 
+**SendEncryptedMessage()**
+* Send signed transaction for encrpyted message
+
 **GetAllConfirmedMessages()**
 * Retrieve all transactions for an account
 
