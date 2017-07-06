@@ -46,18 +46,9 @@ public class SimplifyNEM {
     public static final String TESTNET_NAMESPACE_SINKING = "TAMESPACEWH4MKFMBCVFERDPOOP4FK7MTDJEYP35";
     public static final String TESTNET_MOSAIC_SINKING = "TBMOSAICOD4F54EE5CDMR23CCBGOAM2XSJBR5OLC";
     public static final String TESTNET_APOSTILLE_SINKING = "TC7MCY5AGJQXZQ4BN3BOPNXUVIGDJCOHBPGUM2GE";
-    public static final String APOSTILLE_TEST_FILE = "C:\\Users\\shint\\OneDrive\\Documents\\Projects\\myXEM\\SimplifyNEM\\testNashorn.txt";
     public static final long MOSAIC_MAX_QUANTITY = 9_000_000_000_000_000L;
 
     public static void main(String[] args) {
-        // Accounts' Details
-        String senderAddress = "TDSPQOUYI6VBGD2SAERJ73ZYMNY5ACJSYNTZSUHP";
-        String senderPublicKey = "47e53fa955f3f09aa2086111757fc9fb74575d5a65076c41a2baebcb304198cd";
-        String senderPrivateKey = "48c74382c3346f061f9e8dce1e15fcc77e4d4d882a2524508c78b0758180f287";
-        String receiverAddress = "TDLAJRXNB25HSO4A3D333PMZFW67IV2PJSUW2RK5";
-        String receiverPublicKey = "29587ae3375d6a3a01cff1c920642a12f99ff6d52290f8172970ae755f4fec11";
-        String receiverPrivateKey = "f0048025a9204acc7f63da80e44782692308f7b8fcbfa562e0d01686ee448e03";
-
         utilityFunc = new UtilityFunctions(NEM_ADDRESS);
 
         //Send Message & XEM
@@ -78,9 +69,15 @@ public class SimplifyNEM {
         //String results = SendTransaction(senderPrivateKey, receiverAddress, 0,"sending mosiacs", "artisancof.art:credits", 1);
         //System.out.println(String.format("Results: %s", results));
 
+        //Send Encrypted Message, use file to simulate encrypted data
+        //String results = SendEncryptedMessage(senderPrivateKey, receiverAddress, "C:\\Users\\shint\\OneDrive\\Documents\\Projects\\myXEM\\SimplifyNEM\\testNashorn.txt");
+        //System.out.println(String.format("Results: %s", results));
+
         //Get existing transactions made
-        GetAllConfirmedMessages(senderAddress);
-        StartWebSocketService(senderAddress);
+        //GetAllConfirmedMessages(senderAddress);
+
+        //Listen to web socket for transactions
+        //StartWebSocketService(senderAddress);
 
         utilityFunc.Disconnect();
     }
@@ -105,8 +102,9 @@ public class SimplifyNEM {
         }
 
         TransferTransaction transaction = new TransferTransaction(timeInstant, senderAccount, recipientAccount, Amount.fromNem(amount), attachment);
-        //transaction.setFee(new DefaultTransactionFeeCalculator(utilityFunc, () -> BlockHeight.ONE, BlockHeight.MAX).calculateMinimumFee(transaction));
-        transaction.setFee(new TransactionFeeCalculatorAfterFork(utilityFunc).calculateMinimumFee(transaction));
+        //BlockHeight[] feeForkHeights = new BlockHeight[] { new BlockHeight(572500), new BlockHeight(975000) }; //Testnet Fee Fork Heights
+        //BlockHeight[] feeForkHeights = new BlockHeight[] { new BlockHeight(875000) }; //Mainnet Fee Fork Heights
+        transaction.setFee(new DefaultTransactionFeeCalculator(utilityFunc, () -> new BlockHeight(utilityFunc.getBlockHeight()), new BlockHeight(572500)).calculateMinimumFee(transaction));
         transaction.setDeadline(timeInstant.addHours(23));
         transaction.sign();
 
@@ -138,16 +136,15 @@ public class SimplifyNEM {
     private static String CreateMosaic(String accountPrivateKey, String mosaicName, String mosaicDescription, String mosaicQty) {
         TimeInstant timeInstant = new SystemTimeProvider().getCurrentTime();
         Account mosaicAccount = new Account(new KeyPair(PrivateKey.fromHexString(accountPrivateKey)));
-        Account sinkingfeeAccount = new Account(Address.fromEncoded(TESTNET_MOSAIC_SINKING));
 
         Properties mosaicProperty = new Properties();
         mosaicProperty.put("divisibility", "0");
         mosaicProperty.put("initialSupply", mosaicQty);
         mosaicProperty.put("supplyMutable", "false");
         mosaicProperty.put("transferable", "true");
-        MosaicDefinition mosaicDef = new MosaicDefinition(mosaicAccount, MosaicId.parse(mosaicName), new MosaicDescriptor(mosaicDescription), new DefaultMosaicProperties(mosaicProperty),  new MosaicLevy(MosaicTransferFeeType.Absolute, mosaicAccount, MosaicId.parse("nem:xem"), Quantity.ZERO));
+        MosaicDefinition mosaicDef = new MosaicDefinition(mosaicAccount, MosaicId.parse(mosaicName), new MosaicDescriptor(mosaicDescription), new DefaultMosaicProperties(mosaicProperty), new MosaicLevy(MosaicTransferFeeType.Absolute, mosaicAccount, MosaicId.parse("nem:xem"), Quantity.ZERO));
 
-        MosaicDefinitionCreationTransaction mosaicTransaction = new MosaicDefinitionCreationTransaction(timeInstant, sinkingfeeAccount, mosaicDef);
+        MosaicDefinitionCreationTransaction mosaicTransaction = new MosaicDefinitionCreationTransaction(timeInstant, mosaicAccount, mosaicDef);
         mosaicTransaction.setFee(Amount.fromNem(20));
         mosaicTransaction.setDeadline(timeInstant.addHours(23));
         mosaicTransaction.sign();
@@ -159,13 +156,12 @@ public class SimplifyNEM {
         return utilityFunc.PostResults(API_ANNOUNCE_TRANSACTION, paramsJSON);
     }
 
-    private static String EncryptedMessage(String ownerPrivateKey, String fileLocation)
-    {
-        File apostileFile = new File(fileLocation);
-        byte[] apostileFileBytes = new byte[(int) apostileFile.length()];
+    private static String SendEncryptedMessage(String senderPrivateKey, String receiverAddress, String fileLocation) {
+        File encryptData = new File(fileLocation);
+        byte[] encryptDataBytes = new byte[(int) encryptData.length()];
         try {
-            FileInputStream fileStream = new FileInputStream(apostileFile);
-            fileStream.read(apostileFileBytes);
+            FileInputStream fileStream = new FileInputStream(encryptData);
+            fileStream.read(encryptDataBytes);
             fileStream.close();
         } catch (Exception e) {
             System.out.println(String.format("Exception caught: %s", e.getMessage()));
@@ -173,21 +169,23 @@ public class SimplifyNEM {
         }
 
         TimeInstant timeInstant = new SystemTimeProvider().getCurrentTime();
-        Account ownerAccount = new Account(new KeyPair(PrivateKey.fromHexString(ownerPrivateKey)));
-        Account sinkingfeeAccount = new Account(Address.fromEncoded(TESTNET_APOSTILLE_SINKING));
+        Account senderAccount = new Account(new KeyPair(PrivateKey.fromHexString(senderPrivateKey)));
+        Account receiverAccount = new Account(Address.fromEncoded(receiverAddress));
         TransferTransactionAttachment attachment = new TransferTransactionAttachment();
-        SecureMessage encryptMessage = SecureMessage.fromEncodedPayload(ownerAccount, sinkingfeeAccount, apostileFileBytes);
+        SecureMessage encryptMessage = SecureMessage.fromEncodedPayload(senderAccount, receiverAccount, encryptDataBytes);
         attachment.setMessage(encryptMessage);
 
-        TransferTransaction apostilleTransaction = new TransferTransaction(timeInstant, ownerAccount, sinkingfeeAccount, Amount.ZERO, attachment);
-        apostilleTransaction.setFee(new DefaultTransactionFeeCalculator(null, () -> BlockHeight.ONE, BlockHeight.MAX).calculateMinimumFee(apostilleTransaction));
-        apostilleTransaction.setDeadline(timeInstant.addHours(23));
-        apostilleTransaction.sign();
+        TransferTransaction encryptTransaction = new TransferTransaction(timeInstant, senderAccount, receiverAccount, Amount.ZERO, attachment);
+        //BlockHeight[] feeForkHeights = new BlockHeight[] { new BlockHeight(572500), new BlockHeight(975000) }; //Testnet Fee Fork Heights
+        //BlockHeight[] feeForkHeights = new BlockHeight[] { new BlockHeight(875000) }; //Mainnet Fee Fork Heights
+        encryptTransaction.setFee(new DefaultTransactionFeeCalculator(utilityFunc, () -> new BlockHeight(utilityFunc.getBlockHeight()), new BlockHeight(572500)).calculateMinimumFee(encryptTransaction));
+        encryptTransaction.setDeadline(timeInstant.addHours(23));
+        encryptTransaction.sign();
 
         JSONObject paramsJSON = new JSONObject();
-        final byte[] data = BinarySerializer.serializeToBytes(apostilleTransaction.asNonVerifiable());
+        final byte[] data = BinarySerializer.serializeToBytes(encryptTransaction.asNonVerifiable());
         paramsJSON.put("data", ByteUtils.toHexString(data));
-        paramsJSON.put("signature", apostilleTransaction.getSignature().toString());
+        paramsJSON.put("signature", encryptTransaction.getSignature().toString());
         return utilityFunc.PostResults(API_ANNOUNCE_TRANSACTION, paramsJSON);
     }
 
@@ -227,7 +225,8 @@ public class SimplifyNEM {
 
         Scanner scanner = new Scanner(System.in);
         try {
-            while (!scanner.nextLine().equalsIgnoreCase("stop")) {}
+            while (!scanner.nextLine().equalsIgnoreCase("stop")) {
+            }
         } catch (Exception e) {
             System.out.println(String.format("Exception caught: %s", e.getMessage()));
             e.printStackTrace();
