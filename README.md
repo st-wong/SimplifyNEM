@@ -16,6 +16,15 @@ Examples on NEM's APIs
 **SendEncryptedMessage()**
 * Send signed transaction for encrpyted message
 
+**CreateMultisigAcc()**
+* Creates a M-of-N MultiSig account
+
+**MultiSigTransaction()**
+* Starts a MultiSig transaction
+
+**CoSigTransaction()**
+* Signs a MultiSig transaction
+
 **GetAllConfirmedMessages()**
 * Retrieve all transactions for an account
 
