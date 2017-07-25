@@ -11,7 +11,6 @@ import org.nem.core.model.mosaic.MosaicFeeInformation;
 import org.nem.core.model.mosaic.MosaicFeeInformationLookup;
 import org.nem.core.model.mosaic.MosaicId;
 import org.nem.core.model.primitive.Amount;
-import org.nem.core.model.primitive.BlockHeight;
 import org.nem.core.model.primitive.Supply;
 import org.nem.core.time.SystemTimeProvider;
 
