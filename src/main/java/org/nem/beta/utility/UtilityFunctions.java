@@ -7,6 +7,7 @@ import org.apache.http.util.EntityUtils;
 
 import org.nem.core.crypto.PublicKey;
 import org.nem.core.model.Address;
+import org.nem.core.model.FeeUnitAwareTransactionFeeCalculator;
 import org.nem.core.model.mosaic.MosaicFeeInformation;
 import org.nem.core.model.mosaic.MosaicFeeInformationLookup;
 import org.nem.core.model.mosaic.MosaicId;
@@ -26,16 +27,14 @@ public class UtilityFunctions implements MosaicFeeInformationLookup {
 
     private static CloseableHttpClient httpClient;
     private static String urlNode;
-    private static long blockHeight;
     private static final String API_MOSAIC_DEFINITION_PAGE = "/namespace/mosaic/definition/page";
-    private static final String API_CHAIN_HEIGHT = "/chain/height";
+    public FeeUnitAwareTransactionFeeCalculator TransactionFeeCalculator = new FeeUnitAwareTransactionFeeCalculator(Amount.fromMicroNem(50_000L), this);
 
     public UtilityFunctions(String url) {
         urlNode = url;
 
         try {
             httpClient = HttpClients.createDefault();
-            blockHeight = JSONObject.fromObject(GetResults(API_CHAIN_HEIGHT,"")).getLong("height");
         } catch (Exception e) {
             System.out.println(String.format("Exception caught: %s", e.getMessage()));
             e.printStackTrace();
@@ -149,9 +148,5 @@ public class UtilityFunctions implements MosaicFeeInformationLookup {
         }
 
         return null;
-    }
-
-    public long getBlockHeight() {
-        return blockHeight;
     }
 }
