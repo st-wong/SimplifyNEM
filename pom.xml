@@ -12,7 +12,12 @@
         <dependency>
             <groupId>org.nem.core</groupId>
             <artifactId>nem-core</artifactId>
-            <version>0.6.91-BETA</version>
+            <version>0.6.95-BETA</version>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk15on</artifactId>
+            <version>1.50</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
